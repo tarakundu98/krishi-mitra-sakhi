@@ -220,9 +220,9 @@ const Chatbot: React.FC<ChatbotProps> = ({
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-secondary flex flex-col">
+    <div className="fullscreen-content bg-gradient-secondary flex flex-col">
       {/* Header */}
-      <div className="gradient-card p-4 shadow-card">
+      <div className="gradient-card p-responsive shadow-card">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={onBack}>
@@ -273,8 +273,8 @@ const Chatbot: React.FC<ChatbotProps> = ({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 p-4 overflow-y-auto">
-        <div className="max-w-4xl mx-auto space-y-4">
+      <div className="flex-1 p-responsive overflow-y-auto">
+        <div className="w-full max-w-none mx-auto space-y-4">
           {messages.map((message) => (
             <div
               key={message.id}
@@ -319,8 +319,8 @@ const Chatbot: React.FC<ChatbotProps> = ({
 
       {/* Quick Questions */}
       {messages.length === 1 && (
-        <div className="p-4">
-          <div className="max-w-4xl mx-auto">
+        <div className="p-responsive">
+          <div className="w-full max-w-none mx-auto">
             <h3 className={`text-sm font-medium mb-3 text-muted-foreground ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
               {t('chatbot.commonQuestions')}
             </h3>
@@ -341,8 +341,8 @@ const Chatbot: React.FC<ChatbotProps> = ({
       )}
 
       {/* Input Area */}
-      <Card className="m-4 shadow-floating border-0">
-        <div className="p-4">
+      <Card className="m-responsive shadow-floating border-0">
+        <div className="p-responsive">
           <div className="flex gap-2">
             <div className="flex-1 relative">
               <Input

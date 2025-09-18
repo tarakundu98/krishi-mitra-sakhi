@@ -17,8 +17,11 @@ import {
 interface DashboardProps {
   farmer?: {
     name: string;
-    location: string;
-    crops: string[];
+    location?: string;
+    village?: string;
+    district?: string;
+    crops?: string[];
+    currentCrops?: string[];
   };
   onNavigate?: (section: string) => void;
 }
@@ -26,8 +29,8 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ 
   farmer = { 
     name: 'രാധാകൃഷ്ണൻ', 
-    location: 'തിരുവനന്തപുരം', 
-    crops: ['നെൽ', 'വാഴ', 'കപ്പ']
+    village: 'തിരുവനന്തപുരം', 
+    currentCrops: ['നെൽ', 'വാഴ', 'കപ്പ']
   },
   onNavigate = () => {}
 }) => {
@@ -70,21 +73,16 @@ const Dashboard: React.FC<DashboardProps> = ({
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-secondary p-4 md:p-6">
-      {/* Language Toggle - Fixed Position */}
-      <div className="fixed top-4 right-4 z-50">
-        <LanguageToggle />
-      </div>
-
+    <div className="fullscreen-content bg-gradient-secondary p-responsive">
       {/* Header */}
-      <div className="gradient-card rounded-xl p-6 mb-6 shadow-card">
+      <div className="gradient-card rounded-xl p-responsive mb-6 shadow-card">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className={`text-2xl font-bold text-foreground ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
               {t('dashboard.greeting')}, {farmer.name}!
             </h1>
             <p className={`text-muted-foreground ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
-              {farmer.location} • {t('dashboard.today')}
+              {farmer.village || farmer.location || 'Kerala'} • {t('dashboard.today')}
             </p>
           </div>
           <div className="text-right">
@@ -111,7 +109,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {quickActions.map((action, index) => (
           <Card 
             key={index} 
-            className="p-4 cursor-pointer hover:scale-105 transition-smooth shadow-card border-0"
+            className="p-responsive cursor-pointer hover:scale-105 transition-smooth shadow-card border-0"
             onClick={action.action}
           >
             <div className={`w-12 h-12 rounded-xl ${action.color} flex items-center justify-center mb-3`}>
@@ -125,7 +123,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Today's Activities */}
       <Card className="mb-6 shadow-card border-0">
-        <div className="p-6">
+        <div className="p-responsive">
           <div className="flex items-center justify-between mb-4">
             <h2 className={`text-xl font-semibold flex items-center gap-2 ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
               <Calendar className="w-5 h-5" />
@@ -165,13 +163,13 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* Crop Overview */}
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         <Card className="shadow-card border-0">
-          <div className="p-6">
+          <div className="p-responsive">
             <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
               <Wheat className="w-5 h-5" />
               {t('dashboard.currentCrops')}
             </h3>
             <div className="space-y-3">
-              {farmer.crops.map((crop, index) => (
+              {(farmer.currentCrops || farmer.crops || []).map((crop, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <span className="font-medium">{crop}</span>
                   <div className="flex items-center gap-2">
@@ -187,7 +185,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </Card>
 
         <Card className="shadow-card border-0">
-          <div className="p-6">
+          <div className="p-responsive">
             <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
               <TrendingUp className="w-5 h-5" />
               {t('dashboard.monthProgress')}
@@ -212,7 +210,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Emergency Contact */}
       <Card className="shadow-card border-0 bg-gradient-primary text-white">
-        <div className="p-4">
+        <div className="p-responsive">
           <div className="flex items-center justify-between">
             <div>
               <h3 className={`font-semibold ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
