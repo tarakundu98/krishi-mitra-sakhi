@@ -14,8 +14,8 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const translations = {
   // Welcome/Landing Page
   'app.title': {
-    malayalam: 'കൃഷി സഖി',
-    english: 'Krishi Sakhi'
+    malayalam: 'കൃഷി മിത്ര',
+    english: 'Krishi Mitra'
   },
   'app.subtitle': {
     malayalam: 'നിങ്ങളുടെ AI പവർഡ് വ്യക്തിഗത കൃഷി സഹായി',
@@ -142,8 +142,8 @@ const translations = {
 
   // Chatbot
   'chatbot.title': {
-    malayalam: 'കൃഷി സഖി',
-    english: 'Krishi Sakhi'
+    malayalam: 'കൃഷി മിത്ര',
+    english: 'Krishi Mitra'
   },
   'chatbot.subtitle': {
     malayalam: 'AI കൃഷി സഹായി',
@@ -175,6 +175,110 @@ const translations = {
     malayalam: 'നിങ്ങളുടെ പേരും ബന്ധപ്പെടാനുള്ള വിവരങ്ങളും',
     english: 'Your name and contact details'
   },
+  'registration.phone': {
+    malayalam: 'മൊബൈൽ നമ്പർ',
+    english: 'Mobile Number'
+  },
+  'registration.name': {
+    malayalam: 'പൂർണ്ണ നാമം',
+    english: 'Full Name'
+  },
+  'registration.age': {
+    malayalam: 'പ്രായം',
+    english: 'Age'
+  },
+  'registration.gender': {
+    malayalam: 'ലിംഗം',
+    english: 'Gender'
+  },
+  'registration.select': {
+    malayalam: 'തിരഞ്ഞെടുക്കുക',
+    english: 'Select'
+  },
+  'registration.male': {
+    malayalam: 'പുരുഷൻ',
+    english: 'Male'
+  },
+  'registration.female': {
+    malayalam: 'സ്ത്രീ',
+    english: 'Female'
+  },
+  'registration.other': {
+    malayalam: 'മറ്റുള്ളവ',
+    english: 'Other'
+  },
+  'registration.step2.title': {
+    malayalam: 'സ്ഥലത്തിന്റെ വിവരങ്ങൾ',
+    english: 'Location Details'
+  },
+  'registration.step2.subtitle': {
+    malayalam: 'നിങ്ങളുടെ കൃഷിയിടത്തിന്റെ സ്ഥലം',
+    english: 'Your farm location'
+  },
+  'registration.village': {
+    malayalam: 'ഗ്രാമം',
+    english: 'Village'
+  },
+  'registration.panchayat': {
+    malayalam: 'പഞ്ചായത്ത്',
+    english: 'Panchayat'
+  },
+  'registration.district': {
+    malayalam: 'ജില്ല',
+    english: 'District'
+  },
+  'registration.gps': {
+    malayalam: 'GPS കോർഡിനേറ്റ്സ് (ഓപ്ഷണൽ)',
+    english: 'GPS Coordinates (Optional)'
+  },
+  'registration.step3.title': {
+    malayalam: 'കൃഷിയിടത്തിന്റെ വിവരങ്ങൾ',
+    english: 'Farm Details'
+  },
+  'registration.step3.subtitle': {
+    malayalam: 'നിങ്ങളുടെ കൃഷിയെക്കുറിച്ചുള്ള വിവരങ്ങൾ',
+    english: 'Information about your farming'
+  },
+  'registration.landSize': {
+    malayalam: 'ഭൂമിയുടെ വിസ്തീർണ്ണം (ഏക്കർ)',
+    english: 'Land Size (Acres)'
+  },
+  'registration.soilType': {
+    malayalam: 'മണ്ണിന്റെ തരം',
+    english: 'Soil Type'
+  },
+  'registration.irrigation': {
+    malayalam: 'ജലസേചനം',
+    english: 'Irrigation'
+  },
+  'registration.currentCrops': {
+    malayalam: 'നിലവിലെ വിളകൾ',
+    english: 'Current Crops'
+  },
+  'registration.step4.title': {
+    malayalam: 'രേഖകളും സമ്മതവും',
+    english: 'Documents & Consent'
+  },
+  'registration.step4.subtitle': {
+    malayalam: 'അവസാന ഘട്ടം - രേഖകൾ അപ്‌ലോഡ് ചെയ്ത് സമ്മതം നൽകുക',
+    english: 'Final step - Upload documents and give consent'
+  },
+  'registration.back': {
+    malayalam: 'തിരികെ',
+    english: 'Back'
+  },
+  'registration.next': {
+    malayalam: 'അടുത്തത്',
+    english: 'Next'
+  },
+  'registration.previous': {
+    malayalam: 'മുമ്പോട്ട്',
+    english: 'Previous'
+  },
+  'registration.complete': {
+    malayalam: 'പൂർത്തിയാക്കുക',
+    english: 'Complete'
+  },
 
   // Common
   'button.back': {
@@ -197,12 +301,12 @@ const translations = {
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem('krishi-sakhi-language');
+    const saved = localStorage.getItem('krishi-mitra-language');
     return (saved as Language) || 'malayalam';
   });
 
   useEffect(() => {
-    localStorage.setItem('krishi-sakhi-language', language);
+    localStorage.setItem('krishi-mitra-language', language);
     
     // Update document language
     document.documentElement.lang = language === 'malayalam' ? 'ml' : 'en';

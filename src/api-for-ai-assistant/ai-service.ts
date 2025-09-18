@@ -1,7 +1,10 @@
 /**
- * AI Assistant Service for Krishi Sakhi
- * Handles all AI-related API calls and responses
- * Placeholder implementation for development
+ * AI Assistant Service for Krishi Mitra
+ * Professional AI integration layer for agricultural assistance
+ * Handles conversation management, speech processing, and contextual farming advice
+ * 
+ * @author Krishi Mitra Team
+ * @version 1.0.0
  */
 
 interface AIMessage {
@@ -34,34 +37,55 @@ interface FarmContext {
 class AIAssistantService {
   private apiKey: string;
   private baseURL: string;
+  private retryAttempts: number = 3;
+  private timeout: number = 10000; // 10 seconds
   
   constructor() {
-    // Placeholder API key - to be replaced with actual integration
-    this.apiKey = 'ABCD1234';
-    this.baseURL = '/api/ai-assistant';
+    // Use the provided Google AI API key
+    this.apiKey = 'AIzaSyDRTh6N8oQ4FXdeyua5RZdeLKN4Vdor690';
+    // Prefer the current public text model endpoint
+    // Docs: https://ai.google.dev/api/generate-content
+    this.baseURL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
   }
 
   /**
    * Send a message to AI assistant and get response
+   * Includes retry logic and proper error handling
    */
   async sendMessage(
     message: string, 
     farmContext: FarmContext,
     language: 'malayalam' | 'english' = 'english'
   ): Promise<AIResponse> {
-    try {
-      // Placeholder implementation - replace with actual API call
-      const response = await this.mockAPICall(message, farmContext, language);
-      
-      // Log for debugging
-      console.log('AI Request:', { message, farmContext, language });
-      console.log('AI Response:', response);
-      
-      return response;
-    } catch (error) {
-      console.error('AI Service Error:', error);
-      throw new Error('AI സേവനം ലഭ്യമല്ല. ദയവായി പിന്നീട് ശ്രമിക്കുക.');
+    let lastError: Error | null = null;
+    
+    for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+      try {
+  // Use actual Google Gemini API (will throw on HTTP errors)
+        const response = await this.callGeminiAPI(message, farmContext, language);
+        
+        // Log for debugging (only in development)
+        if (import.meta.env.DEV) {
+          console.log('AI Request:', { message, farmContext, language });
+          console.log('AI Response:', response);
+        }
+        
+        return response;
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(`AI Service attempt ${attempt} failed:`, error);
+        
+        // Don't retry on the last attempt
+        if (attempt === this.retryAttempts) break;
+        
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+      }
     }
+    
+    // All attempts failed - surface error so UI can show a message
+    console.error('AI Service failed after retries:', lastError);
+    throw lastError ?? new Error('AI service unavailable');
   }
 
   /**
@@ -100,6 +124,88 @@ class AIAssistantService {
   ): Promise<AIResponse> {
     const contextualQuery = `Farming context: ${JSON.stringify(farmContext)}. Question: ${query}`;
     return this.sendMessage(contextualQuery, farmContext, language);
+  }
+
+  /**
+   * Call Google Gemini API for AI responses
+   */
+  private async callGeminiAPI(
+    message: string,
+    farmContext: FarmContext,
+    language: 'malayalam' | 'english'
+  ): Promise<AIResponse> {
+    const prompt = this.buildFarmingPrompt(message, farmContext, language);
+    
+    const requestBody = {
+      contents: [{
+        role: 'user',
+        parts: [{ text: prompt }]
+      }],
+      generationConfig: {
+        temperature: 0.8,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 1024,
+      },
+      // Keep default safety; change if you need fewer blocks
+      // safetySettings: []
+    } as const;
+
+    const response = await fetch(`${this.baseURL}?key=${this.apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Google AI API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+      throw new Error('Invalid response from Google AI API');
+    }
+
+    // Some responses return multiple parts; join them for a complete message
+    const parts = data.candidates[0].content.parts || [];
+    const aiMessage = parts.map((p: any) => p.text ?? '').join('').trim();
+
+    return {
+      message: aiMessage,
+      confidence: 0.9,
+      language,
+      actionType: 'advice'
+    };
+  }
+
+  /**
+   * Build farming-specific prompt for AI
+   */
+  private buildFarmingPrompt(
+    message: string,
+    farmContext: FarmContext,
+    language: 'malayalam' | 'english'
+  ): string {
+    const languageInstruction = language === 'malayalam' 
+      ? 'Please respond in Malayalam language.'
+      : 'Please respond in English language.';
+
+    return `You are Krishi Mitra, an AI farming assistant for Kerala farmers. ${languageInstruction}
+
+Farmer Context:
+- Location: ${farmContext.location}
+- Crops: ${farmContext.cropType.join(', ')}
+- Land Size: ${farmContext.landSize} acres
+- Soil Type: ${farmContext.soilType}
+- Irrigation: ${farmContext.irrigationType}
+- Season: ${farmContext.currentSeason}
+
+Farmer's Question: ${message}
+
+Please provide helpful, practical farming advice specific to Kerala's agricultural conditions. Keep responses concise and actionable.`;
   }
 
   // Mock implementations - replace with actual API integrations

@@ -9,6 +9,7 @@ import {
   Mic, 
   MicOff, 
   Volume2, 
+  VolumeX,
   ArrowLeft,
   Loader2
 } from 'lucide-react';
@@ -21,35 +22,71 @@ interface ChatbotProps {
 
 const Chatbot: React.FC<ChatbotProps> = ({ 
   onBack = () => {},
-  farmContext = {
-    farmerId: 'farmer001',
-    location: 'തിരുവനന്തപുരം',
-    cropType: ['നെൽ', 'വാഴ'],
-    landSize: 2.5,
-    soilType: 'കളിമണ്ണ്',
-    irrigationType: 'മഴ',
-    currentSeason: 'വർഷകാലം'
-  }
+  farmContext
 }) => {
   const { t, language, setLanguage } = useLanguage();
-  const [messages, setMessages] = useState<AIMessage[]>([
-    {
-      id: '1',
-      text: 'നമസ്കാരം! ഞാൻ കൃഷി സഖി, നിങ്ങളുടെ AI കൃഷി സഹായി. എങ്ങനെ സഹായിക്കാം?',
-      isUser: false,
-      timestamp: new Date(),
-      language: 'malayalam'
-    }
-  ]);
+  
+  // Create default farm context based on current language
+  const defaultFarmContext: FarmContext = {
+    farmerId: 'farmer001',
+    location: language === 'malayalam' ? 'തിരുവനന്തപുരം' : 'Thiruvananthapuram',
+    cropType: language === 'malayalam' ? ['നെൽ', 'വാഴ'] : ['Rice', 'Banana'],
+    landSize: 2.5,
+    soilType: language === 'malayalam' ? 'കളിമണ്ണ്' : 'Clay',
+    irrigationType: language === 'malayalam' ? 'മഴ' : 'Rain-fed',
+    currentSeason: language === 'malayalam' ? 'വർഷകാലം' : 'Monsoon'
+  };
+
+  const activeFarmContext = farmContext || defaultFarmContext;
+  
+  const [messages, setMessages] = useState<AIMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
+  const [voicesReady, setVoicesReady] = useState(false);
+  const [isAudioOn, setIsAudioOn] = useState(false);
+  const [ttsLanguage, setTtsLanguage] = useState<'english' | 'malayalam'>(
+    language === 'malayalam' ? 'malayalam' : 'english'
+  );
+
+  // Create language-aware initial message
+  const getInitialMessage = (): AIMessage => ({
+    id: '1',
+    text: language === 'malayalam' 
+      ? 'നമസ്കാരം! ഞാൻ കൃഷി മിത്ര, നിങ്ങളുടെ AI കൃഷി സഹായി. എങ്ങനെ സഹായിക്കാം?'
+      : 'Hello! I am Krishi Mitra, your AI farming assistant. How can I help you?',
+    isUser: false,
+    timestamp: new Date(),
+    language: language
+  });
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Initialize and update messages when language changes
+  useEffect(() => {
+    setMessages([getInitialMessage()]);
+    // Default tts language to match current UI language when user switches
+    setTtsLanguage(language === 'malayalam' ? 'malayalam' : 'english');
+  }, [language]);
+
+  // Ensure speechSynthesis voices are loaded (important for some browsers)
+  useEffect(() => {
+    if ('speechSynthesis' in window) {
+      const synth = window.speechSynthesis;
+      const check = () => {
+        const v = synth.getVoices();
+        if (v && v.length > 0) setVoicesReady(true);
+      };
+      check();
+      // Some browsers fire "voiceschanged" when voices become available
+      synth.addEventListener?.('voiceschanged', check as any);
+      return () => synth.removeEventListener?.('voiceschanged', check as any);
+    }
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -66,12 +103,12 @@ const Chatbot: React.FC<ChatbotProps> = ({
       language: language
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
+  setMessages(prev => [...prev, userMessage]);
+  // Do not clear input; keep the user's query visible as requested
     setIsLoading(true);
 
     try {
-      const response = await aiAssistant.sendMessage(text, farmContext, language);
+      const response = await aiAssistant.sendMessage(text, activeFarmContext, language);
       
       const aiMessage: AIMessage = {
         id: (Date.now() + 1).toString(),
@@ -83,6 +120,10 @@ const Chatbot: React.FC<ChatbotProps> = ({
       };
 
       setMessages(prev => [...prev, aiMessage]);
+      // If audio is toggled ON, auto-speak the assistant reply using selected EN/ML
+      if (isAudioOn) {
+        await playAudio(aiMessage.text, ttsLanguage);
+      }
     } catch (error) {
       const errorMessage: AIMessage = {
         id: (Date.now() + 1).toString(),
@@ -130,11 +171,42 @@ const Chatbot: React.FC<ChatbotProps> = ({
     }
   };
 
-  const playAudio = async (text: string) => {
+  // Speak text in the selected language using Web Speech API with Indian accents
+  const playAudio = async (text: string, forceLang?: 'malayalam' | 'english') => {
+    // Try Web Speech API first for lower latency and no network needed
     try {
-      const audioUrl = await aiAssistant.textToSpeech(text, language);
+      const synth = window.speechSynthesis;
+      if (synth) {
+        // Cancel any ongoing speech
+        if (synth.speaking) synth.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        // Pick a voice based on requested language and prefer Indian accent
+        const voices = synth.getVoices();
+        const langToUse = forceLang ?? language;
+        const wanted = langToUse === 'malayalam' ? ['ml-in', 'ml'] : ['en-in', 'en'];
+        const voice = voices.find(v => {
+          const l = (v.lang || '').toLowerCase();
+          return wanted.some(w => l.startsWith(w));
+        }) || voices.find(v => (v.lang || '').toLowerCase().startsWith(wanted[1]));
+
+        if (voice) utterance.voice = voice;
+        utterance.lang = voice?.lang || (langToUse === 'malayalam' ? 'ml-IN' : 'en-IN');
+        utterance.rate = 1; // natural speed
+        utterance.pitch = 1; // natural pitch
+        synth.speak(utterance);
+        return;
+      }
+    } catch (e) {
+      // Continue to fallback
+      console.warn('Web Speech API TTS failed, falling back to audio URL.', e);
+    }
+
+    // Fallback to server/AI generated audio url
+    try {
+      const audioUrl = await aiAssistant.textToSpeech(text, forceLang ?? language);
       const audio = new Audio(audioUrl);
-      audio.play();
+      await audio.play();
     } catch (error) {
       console.error('Audio playback failed:', error);
     }
@@ -165,7 +237,36 @@ const Chatbot: React.FC<ChatbotProps> = ({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {/* Global audio ON/OFF toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={isAudioOn ? 'Disable audio' : 'Enable audio'}
+              onClick={() => setIsAudioOn(v => !v)}
+              title={isAudioOn ? 'Audio On' : 'Audio Off'}
+            >
+              {isAudioOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </Button>
+            {/* EN / ML selectors (global) */}
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <button
+                type="button"
+                className={ttsLanguage === 'english' ? 'text-primary' : 'text-foreground/70 hover:text-foreground'}
+                onClick={() => setTtsLanguage('english')}
+                title="Speak in English (India)"
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                className={ttsLanguage === 'malayalam' ? 'text-primary' : 'text-foreground/70 hover:text-foreground'}
+                onClick={() => setTtsLanguage('malayalam')}
+                title="Speak in Malayalam (India)"
+              >
+                ML
+              </button>
+            </div>
             <LanguageToggle />
           </div>
         </div>
@@ -193,16 +294,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
                   <span className="text-xs opacity-70">
                     {message.timestamp.toLocaleTimeString('ml-IN')}
                   </span>
-                  {!message.isUser && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => playAudio(message.text)}
-                      className="h-6 w-6 p-0"
-                    >
-                      <Volume2 className="w-3 h-3" />
-                    </Button>
-                  )}
+                  {/* No per-message buttons; speech is controlled globally */}
                 </div>
               </div>
             </div>

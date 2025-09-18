@@ -10,7 +10,7 @@ export type { AIMessage, AIResponse, FarmContext } from './ai-service';
 export const AI_CONFIG = {
   // Replace with actual API endpoints
   BASE_URL: process.env.NODE_ENV === 'production' 
-    ? 'https://api.krishisakhi.com/v1' 
+    ? 'https://api.krishimitra.com/v1' 
     : '/api/v1',
   
   // Timeout settings

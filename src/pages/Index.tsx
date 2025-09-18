@@ -16,7 +16,14 @@ const Index = () => {
   const { t, language } = useLanguage();
 
   const handleRegistrationComplete = (data: any) => {
-    setFarmerData(data);
+    // Map registration data to dashboard format
+    const mappedFarmerData = {
+      name: data.name || 'Unknown',
+      location: data.district || data.village || 'Unknown Location',
+      crops: data.currentCrops || []
+    };
+    
+    setFarmerData(mappedFarmerData);
     setCurrentState('dashboard');
   };
 
@@ -31,6 +38,18 @@ const Index = () => {
       default:
         break;
     }
+  };
+
+  const handleDirectDashboardAccess = () => {
+    // Create demo farmer data for direct dashboard access
+    const demoFarmerData = {
+      name: language === 'malayalam' ? 'രാധാകൃഷ്ണൻ' : 'Demo Farmer',
+      location: language === 'malayalam' ? 'തിരുവനന്തപുരം' : 'Thiruvananthapuram',
+      crops: language === 'malayalam' ? ['നെൽ', 'വാഴ', 'കപ്പ'] : ['Rice', 'Banana', 'Tapioca']
+    };
+    
+    setFarmerData(demoFarmerData);
+    setCurrentState('dashboard');
   };
 
   const renderWelcome = () => (
@@ -112,7 +131,7 @@ const Index = () => {
               <Button 
                 variant="outline" 
                 size="lg"
-                onClick={() => setCurrentState('dashboard')}
+                onClick={handleDirectDashboardAccess}
               >
                 {t('button.goToDashboard')}
               </Button>
@@ -142,10 +161,21 @@ const Index = () => {
       );
       
     case 'chatbot':
+      // Transform farmer data to FarmContext format for AI service
+      const farmContext = farmerData ? {
+        farmerId: 'farmer001',
+        location: farmerData.location || 'Kerala',
+        cropType: farmerData.crops || ['Rice'],
+        landSize: 2.5, // Default value, could be added to registration
+        soilType: 'Clay', // Default value, could be from registration
+        irrigationType: 'Rain-fed', // Default value, could be from registration
+        currentSeason: 'Monsoon'
+      } : undefined;
+
       return (
         <Chatbot 
           onBack={() => setCurrentState('dashboard')}
-          farmContext={farmerData}
+          farmContext={farmContext}
         />
       );
       
