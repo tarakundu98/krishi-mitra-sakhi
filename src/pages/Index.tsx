@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import Dashboard from '@/components/features/Dashboard';
 import Chatbot from '@/components/features/Chatbot';
 import Registration from '@/components/features/Registration';
+import LanguageToggle from '@/components/ui/language-toggle';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Sprout, Users, Shield } from 'lucide-react';
 
 type AppState = 'welcome' | 'registration' | 'dashboard' | 'chatbot';
@@ -11,6 +13,7 @@ type AppState = 'welcome' | 'registration' | 'dashboard' | 'chatbot';
 const Index = () => {
   const [currentState, setCurrentState] = useState<AppState>('welcome');
   const [farmerData, setFarmerData] = useState(null);
+  const { t, language } = useLanguage();
 
   const handleRegistrationComplete = (data: any) => {
     setFarmerData(data);
@@ -32,6 +35,11 @@ const Index = () => {
 
   const renderWelcome = () => (
     <div className="min-h-screen bg-gradient-secondary flex flex-col">
+      {/* Language Toggle - Fixed Position */}
+      <div className="fixed top-4 right-4 z-50">
+        <LanguageToggle />
+      </div>
+
       {/* Hero Section */}
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="max-w-4xl w-full">
@@ -42,16 +50,15 @@ const Index = () => {
             </div>
             
             <h1 className="text-4xl md:text-6xl font-bold mb-4 text-malayalam">
-              കൃഷി സഖി
+              {t('app.title')}
             </h1>
             
             <p className="text-xl md:text-2xl text-muted-foreground mb-6 text-malayalam">
-              നിങ്ങളുടെ AI പവർഡ് വ്യക്തിഗത കൃഷി സഹായി
+              {t('app.subtitle')}
             </p>
             
             <div className="text-lg text-muted-foreground mb-8 text-malayalam max-w-2xl mx-auto">
-              കേരളത്തിലെ ചെറുകിട കർഷകർക്കായി പ്രത്യേകം രൂപകൽപ്പന ചെയ്ത, 
-              മലയാളത്തിൽ സംസാരിക്കുന്ന ബുദ്ധിമാനായ കൃഷി ഉപദേഷ്ടാവ്
+              {t('app.description')}
             </div>
             
             <Button 
@@ -59,7 +66,7 @@ const Index = () => {
               className="gradient-primary text-lg px-8 py-4 h-auto"
               onClick={() => setCurrentState('registration')}
             >
-              ആരംഭിക്കുക
+              {t('button.getStarted')}
             </Button>
           </Card>
 
@@ -69,9 +76,9 @@ const Index = () => {
               <div className="w-16 h-16 gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
                 <Sprout className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-malayalam">സ്മാർട്ട് ഉപദേശം</h3>
+              <h3 className="text-lg font-semibold mb-2 text-malayalam">{t('feature.smartAdvice.title')}</h3>
               <p className="text-muted-foreground text-malayalam">
-                കാലാവസ്ഥ, മണ്ണ്, വിള എന്നിവ അനുസരിച്ച് വ്യക്തിഗതമാക്കിയ കൃഷി ഉപദേശങ്ങൾ
+                {t('feature.smartAdvice.desc')}
               </p>
             </Card>
 
@@ -79,9 +86,9 @@ const Index = () => {
               <div className="w-16 h-16 bg-success rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-malayalam">മലയാളം സപ്പോർട്ട്</h3>
+              <h3 className="text-lg font-semibold mb-2 text-malayalam">{t('feature.malayalamSupport.title')}</h3>
               <p className="text-muted-foreground text-malayalam">
-                ശബ്ദം, ടെക്സ്റ്റ് - രണ്ടിലും മലയാളത്തിൽ സംസാരിക്കാം
+                {t('feature.malayalamSupport.desc')}
               </p>
             </Card>
 
@@ -89,9 +96,9 @@ const Index = () => {
               <div className="w-16 h-16 bg-warning rounded-full flex items-center justify-center mx-auto mb-4">
                 <Shield className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-malayalam">സുരക്ഷിതം</h3>
+              <h3 className="text-lg font-semibold mb-2 text-malayalam">{t('feature.secure.title')}</h3>
               <p className="text-muted-foreground text-malayalam">
-                നിങ്ങളുടെ എല്ലാ വിവരങ്ങളും സുരക്ഷിതമായി സൂക്ഷിക്കുന്നു
+                {t('feature.secure.desc')}
               </p>
             </Card>
           </div>
@@ -99,15 +106,15 @@ const Index = () => {
           {/* Quick Demo */}
           <Card className="p-6 shadow-card border-0">
             <div className="text-center">
-              <h3 className="text-xl font-semibold mb-4 text-malayalam">
-                ഇതിനകം അക്കൗണ്ട് ഉണ്ടോ?
+              <h3 className={`text-xl font-semibold mb-4 ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
+                {t('account.existing')}
               </h3>
               <Button 
                 variant="outline" 
                 size="lg"
                 onClick={() => setCurrentState('dashboard')}
               >
-                ഡാഷ്ബോർഡിലേക്ക് പോകുക
+                {t('button.goToDashboard')}
               </Button>
             </div>
           </Card>

@@ -2,12 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import LanguageToggle from '@/components/ui/language-toggle';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   Send, 
   Mic, 
   MicOff, 
   Volume2, 
-  Languages,
   ArrowLeft,
   Loader2
 } from 'lucide-react';
@@ -30,6 +31,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
     currentSeason: 'വർഷകാലം'
   }
 }) => {
+  const { t, language, setLanguage } = useLanguage();
   const [messages, setMessages] = useState<AIMessage[]>([
     {
       id: '1',
@@ -42,7 +44,6 @@ const Chatbot: React.FC<ChatbotProps> = ({
   const [inputMessage, setInputMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState<'malayalam' | 'english'>('malayalam');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
 
@@ -62,7 +63,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
       text,
       isUser: true,
       timestamp: new Date(),
-      language: currentLanguage
+      language: language
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -70,7 +71,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
     setIsLoading(true);
 
     try {
-      const response = await aiAssistant.sendMessage(text, farmContext, currentLanguage);
+      const response = await aiAssistant.sendMessage(text, farmContext, language);
       
       const aiMessage: AIMessage = {
         id: (Date.now() + 1).toString(),
@@ -110,7 +111,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
         mediaRecorder.current.onstop = async () => {
           const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
           try {
-            const transcription = await aiAssistant.speechToText(audioBlob, currentLanguage);
+            const transcription = await aiAssistant.speechToText(audioBlob, language);
             setInputMessage(transcription);
           } catch (error) {
             console.error('Speech recognition failed:', error);
@@ -131,16 +132,12 @@ const Chatbot: React.FC<ChatbotProps> = ({
 
   const playAudio = async (text: string) => {
     try {
-      const audioUrl = await aiAssistant.textToSpeech(text, currentLanguage);
+      const audioUrl = await aiAssistant.textToSpeech(text, language);
       const audio = new Audio(audioUrl);
       audio.play();
     } catch (error) {
       console.error('Audio playback failed:', error);
     }
-  };
-
-  const toggleLanguage = () => {
-    setCurrentLanguage(prev => prev === 'malayalam' ? 'english' : 'malayalam');
   };
 
   const quickQuestions = [
@@ -160,15 +157,16 @@ const Chatbot: React.FC<ChatbotProps> = ({
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-xl font-bold">കൃഷി സഖി</h1>
-              <p className="text-sm text-muted-foreground">AI കൃഷി സഹായി</p>
+              <h1 className={`text-xl font-bold ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
+                {t('chatbot.title')}
+              </h1>
+              <p className={`text-sm text-muted-foreground ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
+                {t('chatbot.subtitle')}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={toggleLanguage}>
-              <Languages className="w-4 h-4 mr-2" />
-              {currentLanguage === 'malayalam' ? 'മലയാളം' : 'English'}
-            </Button>
+            <LanguageToggle />
           </div>
         </div>
       </div>
@@ -215,7 +213,9 @@ const Chatbot: React.FC<ChatbotProps> = ({
               <div className="bg-card text-card-foreground rounded-2xl p-4 shadow-card">
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>ചിന്തിക്കുന്നു...</span>
+                  <span className={language === 'malayalam' ? 'text-malayalam' : ''}>
+                    {t('chatbot.thinking')}
+                  </span>
                 </div>
               </div>
             </div>
@@ -229,8 +229,8 @@ const Chatbot: React.FC<ChatbotProps> = ({
       {messages.length === 1 && (
         <div className="p-4">
           <div className="max-w-4xl mx-auto">
-            <h3 className="text-sm font-medium mb-3 text-muted-foreground">
-              സാധാരണ ചോദ്യങ്ങൾ:
+            <h3 className={`text-sm font-medium mb-3 text-muted-foreground ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
+              {t('chatbot.commonQuestions')}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {quickQuestions.map((question, index) => (
@@ -256,12 +256,8 @@ const Chatbot: React.FC<ChatbotProps> = ({
               <Input
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder={
-                  currentLanguage === 'malayalam' 
-                    ? 'നിങ്ങളുടെ ചോദ്യം ടൈപ്പ് ചെയ്യുക...'
-                    : 'Type your question...'
-                }
-                className={`pr-12 ${currentLanguage === 'malayalam' ? 'text-malayalam' : ''}`}
+                placeholder={t(`chatbot.placeholder.${language}`)}
+                className={`pr-12 ${language === 'malayalam' ? 'text-malayalam' : ''}`}
                 onKeyPress={(e) => e.key === 'Enter' && sendMessage(inputMessage)}
               />
             </div>

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import LanguageToggle from '@/components/ui/language-toggle';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   Sprout, 
   CloudRain, 
@@ -29,31 +31,32 @@ const Dashboard: React.FC<DashboardProps> = ({
   },
   onNavigate = () => {}
 }) => {
+  const { t, language } = useLanguage();
   const quickActions = [
     {
-      title: 'AI സഹായി',
-      subtitle: 'ചോദിക്കുക',
+      title: t('dashboard.aiAssistant'),
+      subtitle: t('dashboard.ask'),
       icon: MessageCircle,
       color: 'gradient-primary',
       action: () => onNavigate('chatbot')
     },
     {
-      title: 'കാലാവസ്ഥ',
-      subtitle: 'പ്രവചനം',
+      title: t('dashboard.weather'),
+      subtitle: t('dashboard.forecast'),
       icon: CloudRain,
       color: 'bg-blue-500',
       action: () => onNavigate('weather')
     },
     {
-      title: 'ഓർമ്മപ്പെടുത്തലുകൾ',
-      subtitle: '3 പുതിയത്',
+      title: t('dashboard.reminders'),
+      subtitle: t('dashboard.newCount'),
       icon: Bell,
       color: 'bg-warning',
       action: () => onNavigate('reminders')
     },
     {
-      title: 'വിളകൾ',
-      subtitle: 'ട്രാക്ക് ചെയ്യുക',
+      title: t('dashboard.crops'),
+      subtitle: t('dashboard.track'),
       icon: Sprout,
       color: 'bg-success',
       action: () => onNavigate('crops')
@@ -68,18 +71,27 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-secondary p-4 md:p-6">
+      {/* Language Toggle - Fixed Position */}
+      <div className="fixed top-4 right-4 z-50">
+        <LanguageToggle />
+      </div>
+
       {/* Header */}
       <div className="gradient-card rounded-xl p-6 mb-6 shadow-card">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              സുപ്രഭാതം, {farmer.name}!
+            <h1 className={`text-2xl font-bold text-foreground ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
+              {t('dashboard.greeting')}, {farmer.name}!
             </h1>
-            <p className="text-muted-foreground">{farmer.location} • ഇന്ന് ചൊവ്വ</p>
+            <p className={`text-muted-foreground ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
+              {farmer.location} • {t('dashboard.today')}
+            </p>
           </div>
           <div className="text-right">
             <div className="text-success text-lg font-semibold">28°C</div>
-            <div className="text-sm text-muted-foreground">കാറ്റുള്ള</div>
+            <div className={`text-sm text-muted-foreground ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
+              {language === 'malayalam' ? 'കാറ്റുള്ള' : 'Windy'}
+            </div>
           </div>
         </div>
         
@@ -87,8 +99,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
           <div className="flex items-center gap-2">
             <CloudRain className="w-5 h-5 text-warning" />
-            <span className="text-warning font-medium">
-              അടുത്ത 2 ദിവസത്തിൽ മഴയ്ക്ക് സാധ്യത
+            <span className={`text-warning font-medium ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
+              {t('dashboard.weatherAlert')}
             </span>
           </div>
         </div>
@@ -115,12 +127,12 @@ const Dashboard: React.FC<DashboardProps> = ({
       <Card className="mb-6 shadow-card border-0">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
+            <h2 className={`text-xl font-semibold flex items-center gap-2 ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
               <Calendar className="w-5 h-5" />
-              ഇന്നത്തെ പ്രവർത്തനങ്ങൾ
+              {t('dashboard.todayActivities')}
             </h2>
             <Button variant="outline" size="sm">
-              എല്ലാം കാണുക
+              {t('dashboard.viewAll')}
             </Button>
           </div>
           
@@ -135,12 +147,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                     activity.status === 'completed' ? 'bg-success' : 'bg-warning'
                   }`} />
                   <div>
-                    <p className="font-medium">{activity.activity}</p>
+                    <p className={`font-medium ${language === 'malayalam' ? 'text-malayalam' : ''}`}>{activity.activity}</p>
                     <p className="text-sm text-muted-foreground">{activity.time}</p>
                   </div>
                 </div>
                 {activity.status === 'pending' && (
-                  <Button size="sm" variant="outline">പൂർത്തിയാക്കുക</Button>
+                  <Button size="sm" variant="outline" className={language === 'malayalam' ? 'text-malayalam' : ''}>
+                    {t('dashboard.complete')}
+                  </Button>
                 )}
               </div>
             ))}
@@ -152,9 +166,9 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         <Card className="shadow-card border-0">
           <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
               <Wheat className="w-5 h-5" />
-              നിലവിലെ വിളകൾ
+              {t('dashboard.currentCrops')}
             </h3>
             <div className="space-y-3">
               {farmer.crops.map((crop, index) => (
@@ -162,7 +176,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <span className="font-medium">{crop}</span>
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-success rounded-full" />
-                    <span className="text-sm text-muted-foreground">വളർച്ചാ ഘട്ടം</span>
+                    <span className={`text-sm text-muted-foreground ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
+                      {t('dashboard.growthStage')}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -172,9 +188,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         <Card className="shadow-card border-0">
           <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
               <TrendingUp className="w-5 h-5" />
-              ഈ മാസത്തെ പുരോഗതി
+              {t('dashboard.monthProgress')}
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between">
@@ -199,12 +215,16 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold">അടിയന്തര സഹായം</h3>
-              <p className="text-white/80 text-sm">കൃഷി വിദഗ്ധരുമായി നേരിട്ട് സംസാരിക്കുക</p>
+              <h3 className={`font-semibold ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
+                {t('dashboard.emergencyHelp')}
+              </h3>
+              <p className={`text-white/80 text-sm ${language === 'malayalam' ? 'text-malayalam' : ''}`}>
+                {t('dashboard.talkToExperts')}
+              </p>
             </div>
             <Button variant="secondary" className="bg-white text-primary hover:bg-white/90">
               <Phone className="w-4 h-4 mr-2" />
-              വിളിക്കുക
+              {t('dashboard.call')}
             </Button>
           </div>
         </div>
